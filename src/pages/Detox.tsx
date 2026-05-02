@@ -104,7 +104,7 @@ export default function Detox() {
       { onConflict: "habit_id,log_date" }
     );
     await awardPoints({
-      amount: POINTS.RELAPSE_PENALTY,
+      penaltyKind: "relapse",
       reason: `Relapse logged · ${relapseFor.name}`,
       sourceType: "relapse",
       sourceId: relapseFor.id,
