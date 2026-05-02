@@ -218,34 +218,40 @@ export type Database = {
       }
       profiles: {
         Row: {
+          abort_penalty: number
           avatar_url: string | null
           created_at: string
           display_name: string | null
           id: string
           onboarding_completed: boolean
           penalties_enabled: boolean
+          relapse_penalty: number
           timezone: string | null
           total_points: number
           updated_at: string
         }
         Insert: {
+          abort_penalty?: number
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
           id: string
           onboarding_completed?: boolean
           penalties_enabled?: boolean
+          relapse_penalty?: number
           timezone?: string | null
           total_points?: number
           updated_at?: string
         }
         Update: {
+          abort_penalty?: number
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
           id?: string
           onboarding_completed?: boolean
           penalties_enabled?: boolean
+          relapse_penalty?: number
           timezone?: string | null
           total_points?: number
           updated_at?: string
