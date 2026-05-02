@@ -236,7 +236,8 @@ function PenaltySlider({
     if (!userId) return;
     if (timer.current) window.clearTimeout(timer.current);
     timer.current = window.setTimeout(async () => {
-      const { error } = await supabase.from("profiles").update({ [field]: v }).eq("id", userId);
+      const update = field === "relapse_penalty" ? { relapse_penalty: v } : { abort_penalty: v };
+      const { error } = await supabase.from("profiles").update(update).eq("id", userId);
       if (error) toast.error("Could not save");
       else onSaved();
     }, 400);
