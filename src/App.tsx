@@ -15,6 +15,7 @@ import Focus from "./pages/Focus";
 import FocusSession from "./pages/FocusSession";
 import Detox from "./pages/Detox";
 import Coach from "./pages/Coach";
+import Rewards from "./pages/Rewards";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -80,6 +81,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <AppShell><Detox /></AppShell>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/rewards"
+              element={
+                <ProtectedRoute>
+                  <AppShell><Rewards /></AppShell>
                 </ProtectedRoute>
               }
             />

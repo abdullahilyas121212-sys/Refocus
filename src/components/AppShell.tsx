@@ -1,13 +1,13 @@
 import { ReactNode } from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import { Home, Target, Timer, ShieldOff, Sparkles } from "lucide-react";
+import { Home, Timer, ShieldOff, Sparkles, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const tabs = [
   { to: "/", label: "Home", icon: Home },
-  { to: "/goals", label: "Goals", icon: Target },
   { to: "/focus", label: "Focus", icon: Timer },
   { to: "/detox", label: "Detox", icon: ShieldOff },
+  { to: "/rewards", label: "Rewards", icon: Trophy },
   { to: "/coach", label: "Coach", icon: Sparkles },
 ];
 
