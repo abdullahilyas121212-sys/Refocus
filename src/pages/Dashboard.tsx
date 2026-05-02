@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Flame, Timer, ArrowRight, Sparkles } from "lucide-react";
+import { Flame, Timer, ArrowRight, Sparkles, Crown, Target, Trophy } from "lucide-react";
+import { usePoints } from "@/hooks/usePoints";
 
 function greeting() {
   const h = new Date().getHours();
@@ -15,6 +16,7 @@ function greeting() {
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const { points, level, title, progress, toNext } = usePoints();
   const [name, setName] = useState("");
   const [focusToday, setFocusToday] = useState(0);
   const [streak, setStreak] = useState(0);
