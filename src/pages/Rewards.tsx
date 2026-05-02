@@ -24,7 +24,7 @@ type Stats = { focusSessions: number; bestSession: number; cleanDays: number; le
 
 export default function Rewards() {
   const { user } = useAuth();
-  const { points, penaltiesEnabled, level, title, progress, toNext, currentAt, nextAt, refresh } = usePoints();
+  const { points, penaltiesEnabled, relapsePenalty, abortPenalty, level, title, progress, toNext, currentAt, nextAt, refresh } = usePoints();
   const [events, setEvents] = useState<Event[]>([]);
   const [stats, setStats] = useState<Stats>({ focusSessions: 0, bestSession: 0, cleanDays: 0, level: 1 });
   const [savingPenalty, setSavingPenalty] = useState(false);
