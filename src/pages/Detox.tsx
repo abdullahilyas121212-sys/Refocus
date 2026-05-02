@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Plus, Flame, Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { awardPoints, POINTS } from "@/lib/rewards";
 
 type Habit = { id: string; name: string };
 type Log = { habit_id: string; log_date: string; status: string };
@@ -81,7 +82,18 @@ export default function Detox() {
       { user_id: user.id, habit_id: h.id, log_date: today_, status: "clean" },
       { onConflict: "habit_id,log_date" }
     );
-    toast.success(`${h.name} — clean today 🔥`);
+    // Compute new streak after this log
+    const newLogs = [...logs.filter((l) => !(l.habit_id === h.id && l.log_date === today_)),
+      { habit_id: h.id, log_date: today_, status: "clean" }];
+    const s = streakDays(newLogs, h.id);
+    let earned = POINTS.CLEAN_DAY;
+    let reason = `${h.name} — clean day`;
+    if (s > 0 && s % 7 === 0) {
+      earned += POINTS.CLEAN_STREAK_MILESTONE;
+      reason = `${s}-day clean streak · ${h.name}`;
+    }
+    await awardPoints({ amount: earned, reason, sourceType: "clean_day", sourceId: h.id, silent: true });
+    toast.success(`${h.name} — clean today · +${earned} XP 🔥`);
     load();
   };
 
@@ -91,6 +103,12 @@ export default function Detox() {
       { user_id: user.id, habit_id: relapseFor.id, log_date: today(), status: "relapse", note: relapseNote || null },
       { onConflict: "habit_id,log_date" }
     );
+    await awardPoints({
+      amount: POINTS.RELAPSE_PENALTY,
+      reason: `Relapse logged · ${relapseFor.name}`,
+      sourceType: "relapse",
+      sourceId: relapseFor.id,
+    });
     toast("Logged. Tomorrow's a fresh page.");
     setRelapseFor(null);
     setRelapseNote("");
