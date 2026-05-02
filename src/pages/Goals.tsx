@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Target, Sparkles, Loader2, Check, Circle } from "lucide-react";
 import { toast } from "sonner";
+import { awardPoints, POINTS } from "@/lib/rewards";
 
 type Goal = { id: string; title: string; description: string | null };
 type Task = { id: string; title: string; completed_at: string | null; goal_id: string | null; est_minutes: number | null };
@@ -79,9 +80,18 @@ export default function Goals() {
   };
 
   const toggleTask = async (task: Task) => {
-    const completed_at = task.completed_at ? null : new Date().toISOString();
+    const wasDone = !!task.completed_at;
+    const completed_at = wasDone ? null : new Date().toISOString();
     setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, completed_at } : t)));
     await supabase.from("tasks").update({ completed_at }).eq("id", task.id);
+    if (!wasDone) {
+      await awardPoints({
+        amount: POINTS.TASK_COMPLETED,
+        reason: `Task done · ${task.title}`,
+        sourceType: "task",
+        sourceId: task.id,
+      });
+    }
   };
 
   return (

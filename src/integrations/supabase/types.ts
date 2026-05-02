@@ -186,6 +186,36 @@ export type Database = {
         }
         Relationships: []
       }
+      point_events: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          reason: string
+          source_id: string | null
+          source_type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          reason: string
+          source_id?: string | null
+          source_type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          reason?: string
+          source_id?: string | null
+          source_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -193,7 +223,9 @@ export type Database = {
           display_name: string | null
           id: string
           onboarding_completed: boolean
+          penalties_enabled: boolean
           timezone: string | null
+          total_points: number
           updated_at: string
         }
         Insert: {
@@ -202,7 +234,9 @@ export type Database = {
           display_name?: string | null
           id: string
           onboarding_completed?: boolean
+          penalties_enabled?: boolean
           timezone?: string | null
+          total_points?: number
           updated_at?: string
         }
         Update: {
@@ -211,7 +245,9 @@ export type Database = {
           display_name?: string | null
           id?: string
           onboarding_completed?: boolean
+          penalties_enabled?: boolean
           timezone?: string | null
+          total_points?: number
           updated_at?: string
         }
         Relationships: []
@@ -262,7 +298,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      award_points: {
+        Args: {
+          _amount: number
+          _reason: string
+          _source_id?: string
+          _source_type: string
+        }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never

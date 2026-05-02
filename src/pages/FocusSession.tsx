@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { awardPoints, POINTS } from "@/lib/rewards";
 
 const fmt = (s: number) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
@@ -60,13 +61,22 @@ export default function FocusSession() {
   const completeSession = async () => {
     setDone(true);
     const actual = Math.round((Date.now() - startedAtRef.current) / 60000);
+    const minutes = Math.min(actual, planned);
     if (sessionIdRef.current) {
       await supabase
         .from("focus_sessions")
-        .update({ completed: true, actual_minutes: Math.min(actual, planned), ended_at: new Date().toISOString(), ended_reason: "completed" })
+        .update({ completed: true, actual_minutes: minutes, ended_at: new Date().toISOString(), ended_reason: "completed" })
         .eq("id", sessionIdRef.current);
     }
-    toast.success("Session complete. Streak +1 🔥");
+    const earned = minutes * POINTS.FOCUS_PER_MINUTE + POINTS.FOCUS_COMPLETION_BONUS;
+    await awardPoints({
+      amount: earned,
+      reason: `${minutes}-min focus session`,
+      sourceType: "focus_session",
+      sourceId: sessionIdRef.current,
+      silent: true,
+    });
+    toast.success(`Session complete · +${earned} XP 🔥`);
   };
 
   const abort = async () => {
@@ -76,6 +86,14 @@ export default function FocusSession() {
         .from("focus_sessions")
         .update({ completed: false, actual_minutes: actual, ended_at: new Date().toISOString(), ended_reason: exitReason || "exited" })
         .eq("id", sessionIdRef.current);
+    }
+    if (actual < planned) {
+      await awardPoints({
+        amount: POINTS.FOCUS_ABORT_PENALTY,
+        reason: "Aborted focus session",
+        sourceType: "focus_session",
+        sourceId: sessionIdRef.current,
+      });
     }
     navigate("/", { replace: true });
   };
