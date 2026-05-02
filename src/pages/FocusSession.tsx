@@ -89,7 +89,7 @@ export default function FocusSession() {
     }
     if (actual < planned) {
       await awardPoints({
-        amount: POINTS.FOCUS_ABORT_PENALTY,
+        penaltyKind: "abort",
         reason: "Aborted focus session",
         sourceType: "focus_session",
         sourceId: sessionIdRef.current,

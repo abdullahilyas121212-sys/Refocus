@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { usePoints } from "@/hooks/usePoints";
 import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
 import { Trophy, Sparkles, TrendingUp, TrendingDown, Zap, Shield, Skull, Flame, Target, Crown, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { POINTS, xpForLevel, titleForLevel } from "@/lib/rewards";
+import { POINTS } from "@/lib/rewards";
 import { toast } from "sonner";
 
 type Event = { id: string; amount: number; reason: string; source_type: string; created_at: string };
@@ -23,7 +24,7 @@ type Stats = { focusSessions: number; bestSession: number; cleanDays: number; le
 
 export default function Rewards() {
   const { user } = useAuth();
-  const { points, penaltiesEnabled, level, title, progress, toNext, currentAt, nextAt, refresh } = usePoints();
+  const { points, penaltiesEnabled, relapsePenalty, abortPenalty, level, title, progress, toNext, currentAt, nextAt, refresh } = usePoints();
   const [events, setEvents] = useState<Event[]>([]);
   const [stats, setStats] = useState<Stats>({ focusSessions: 0, bestSession: 0, cleanDays: 0, level: 1 });
   const [savingPenalty, setSavingPenalty] = useState(false);
@@ -112,11 +113,32 @@ export default function Rewards() {
               <h2 className="font-semibold">Hard mode</h2>
               <Switch checked={penaltiesEnabled} onCheckedChange={togglePenalties} disabled={savingPenalty} />
             </div>
-            <p className="mt-1 text-sm text-muted-foreground">Lose XP when you break the rules. The brain learns faster when stakes are real.</p>
-            <ul className="mt-3 space-y-1.5 text-sm">
-              <Row label="Logging a relapse" value={`${POINTS.RELAPSE_PENALTY}`} negative />
-              <Row label="Aborting a focus session" value={`${POINTS.FOCUS_ABORT_PENALTY}`} negative />
-            </ul>
+            <p className="mt-1 text-sm text-muted-foreground">Lose XP when you break the rules. Tune the stakes to your taste.</p>
+
+            {penaltiesEnabled && (
+              <div className="mt-5 space-y-5">
+                <PenaltySlider
+                  label="Logging a relapse"
+                  field="relapse_penalty"
+                  value={relapsePenalty}
+                  min={5}
+                  max={200}
+                  step={5}
+                  userId={user?.id}
+                  onSaved={refresh}
+                />
+                <PenaltySlider
+                  label="Aborting a focus session"
+                  field="abort_penalty"
+                  value={abortPenalty}
+                  min={0}
+                  max={100}
+                  step={5}
+                  userId={user?.id}
+                  onSaved={refresh}
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -180,5 +202,69 @@ function Row({ label, value, accent, negative }: { label: string; value: string;
         {value} XP
       </span>
     </li>
+  );
+}
+
+function flavorFor(value: number, max: number) {
+  if (value === 0) return "Soft landing";
+  const r = value / max;
+  if (r < 0.25) return "Gentle nudge";
+  if (r < 0.55) return "Real stakes";
+  if (r < 0.85) return "Punishing";
+  return "Brutal";
+}
+
+function PenaltySlider({
+  label, field, value, min, max, step, userId, onSaved,
+}: {
+  label: string;
+  field: "relapse_penalty" | "abort_penalty";
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  userId?: string;
+  onSaved: () => void;
+}) {
+  const [local, setLocal] = useState(value);
+  const timer = useRef<number | null>(null);
+
+  // Sync when external value changes (e.g. realtime update from another tab)
+  useEffect(() => { setLocal(value); }, [value]);
+
+  const commit = (v: number) => {
+    if (!userId) return;
+    if (timer.current) window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(async () => {
+      const update = field === "relapse_penalty" ? { relapse_penalty: v } : { abort_penalty: v };
+      const { error } = await supabase.from("profiles").update(update).eq("id", userId);
+      if (error) toast.error("Could not save");
+      else onSaved();
+    }, 400);
+  };
+
+  return (
+    <div>
+      <div className="mb-2 flex items-baseline justify-between">
+        <span className="text-sm text-muted-foreground">{label}</span>
+        <span className="text-xs text-muted-foreground">{flavorFor(local, max)}</span>
+      </div>
+      <div className="flex items-center gap-3">
+        <Slider
+          value={[local]}
+          min={min}
+          max={max}
+          step={step}
+          onValueChange={(v) => { setLocal(v[0]); commit(v[0]); }}
+          className="flex-1"
+        />
+        <span className={cn(
+          "min-w-[64px] rounded-lg px-2 py-1 text-right text-sm font-bold tabular-nums",
+          local === 0 ? "bg-muted text-muted-foreground" : "bg-destructive/15 text-destructive"
+        )}>
+          {local === 0 ? "0" : `−${local}`} XP
+        </span>
+      </div>
+    </div>
   );
 }

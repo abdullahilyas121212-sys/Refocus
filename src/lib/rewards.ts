@@ -45,12 +45,16 @@ export function titleForLevel(n: number) {
   return "Beginner";
 }
 
+export type PenaltyKind = "relapse" | "abort";
+
 /**
- * Award (or deduct) points. Penalties are gated by the user's profile.penalties_enabled.
+ * Award (or deduct) points. Penalties are gated by profile.penalties_enabled
+ * and use the user's configured magnitude when `penaltyKind` is provided.
  * Returns the inserted amount (0 if skipped).
  */
 export async function awardPoints(opts: {
-  amount: number;
+  amount?: number;
+  penaltyKind?: PenaltyKind;
   reason: string;
   sourceType: SourceType;
   sourceId?: string | null;
@@ -59,9 +63,23 @@ export async function awardPoints(opts: {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return 0;
 
-  let amount = opts.amount;
+  let amount = opts.amount ?? 0;
 
-  if (amount < 0) {
+  // Resolve penalty magnitude from profile when this is a configurable penalty.
+  if (opts.penaltyKind) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("penalties_enabled, relapse_penalty, abort_penalty")
+      .eq("id", user.id)
+      .maybeSingle();
+    if (!profile?.penalties_enabled) return 0;
+    const magnitude = opts.penaltyKind === "relapse"
+      ? (profile.relapse_penalty ?? Math.abs(POINTS.RELAPSE_PENALTY))
+      : (profile.abort_penalty ?? Math.abs(POINTS.FOCUS_ABORT_PENALTY));
+    if (magnitude <= 0) return 0;
+    amount = -magnitude;
+  } else if (amount < 0) {
+    // Legacy negative amount path — still gate on penalties_enabled.
     const { data: profile } = await supabase
       .from("profiles")
       .select("penalties_enabled")
@@ -69,6 +87,8 @@ export async function awardPoints(opts: {
       .maybeSingle();
     if (!profile?.penalties_enabled) return 0;
   }
+
+  if (amount === 0) return 0;
 
   const { error } = await supabase.from("point_events").insert({
     user_id: user.id,

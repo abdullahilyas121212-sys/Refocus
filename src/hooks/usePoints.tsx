@@ -7,23 +7,26 @@ export function usePoints() {
   const { user } = useAuth();
   const [points, setPoints] = useState(0);
   const [penaltiesEnabled, setPenaltiesEnabled] = useState(false);
+  const [relapsePenalty, setRelapsePenalty] = useState(25);
+  const [abortPenalty, setAbortPenalty] = useState(10);
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
     if (!user) return;
     const { data } = await supabase
       .from("profiles")
-      .select("total_points, penalties_enabled")
+      .select("total_points, penalties_enabled, relapse_penalty, abort_penalty")
       .eq("id", user.id)
       .maybeSingle();
     setPoints(data?.total_points ?? 0);
     setPenaltiesEnabled(!!data?.penalties_enabled);
+    setRelapsePenalty(data?.relapse_penalty ?? 25);
+    setAbortPenalty(data?.abort_penalty ?? 10);
     setLoading(false);
   }, [user]);
 
   useEffect(() => { refresh(); }, [refresh]);
 
-  // Realtime updates when ledger changes
   useEffect(() => {
     if (!user) return;
     const channel = supabase
@@ -34,5 +37,13 @@ export function usePoints() {
     return () => { supabase.removeChannel(channel); };
   }, [user, refresh]);
 
-  return { points, penaltiesEnabled, loading, refresh, ...levelFromPoints(points) };
+  return {
+    points,
+    penaltiesEnabled,
+    relapsePenalty,
+    abortPenalty,
+    loading,
+    refresh,
+    ...levelFromPoints(points),
+  };
 }
