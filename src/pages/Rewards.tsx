@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { usePoints } from "@/hooks/usePoints";
 import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
 import { Trophy, Sparkles, TrendingUp, TrendingDown, Zap, Shield, Skull, Flame, Target, Crown, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { POINTS, xpForLevel, titleForLevel } from "@/lib/rewards";
+import { POINTS } from "@/lib/rewards";
 import { toast } from "sonner";
 
 type Event = { id: string; amount: number; reason: string; source_type: string; created_at: string };
