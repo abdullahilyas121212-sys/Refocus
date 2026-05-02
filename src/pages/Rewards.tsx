@@ -204,3 +204,66 @@ function Row({ label, value, accent, negative }: { label: string; value: string;
     </li>
   );
 }
+
+function flavorFor(value: number, max: number) {
+  if (value === 0) return "Soft landing";
+  const r = value / max;
+  if (r < 0.25) return "Gentle nudge";
+  if (r < 0.55) return "Real stakes";
+  if (r < 0.85) return "Punishing";
+  return "Brutal";
+}
+
+function PenaltySlider({
+  label, field, value, min, max, step, userId, onSaved,
+}: {
+  label: string;
+  field: "relapse_penalty" | "abort_penalty";
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  userId?: string;
+  onSaved: () => void;
+}) {
+  const [local, setLocal] = useState(value);
+  const timer = useRef<number | null>(null);
+
+  // Sync when external value changes (e.g. realtime update from another tab)
+  useEffect(() => { setLocal(value); }, [value]);
+
+  const commit = (v: number) => {
+    if (!userId) return;
+    if (timer.current) window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(async () => {
+      const { error } = await supabase.from("profiles").update({ [field]: v }).eq("id", userId);
+      if (error) toast.error("Could not save");
+      else onSaved();
+    }, 400);
+  };
+
+  return (
+    <div>
+      <div className="mb-2 flex items-baseline justify-between">
+        <span className="text-sm text-muted-foreground">{label}</span>
+        <span className="text-xs text-muted-foreground">{flavorFor(local, max)}</span>
+      </div>
+      <div className="flex items-center gap-3">
+        <Slider
+          value={[local]}
+          min={min}
+          max={max}
+          step={step}
+          onValueChange={(v) => { setLocal(v[0]); commit(v[0]); }}
+          className="flex-1"
+        />
+        <span className={cn(
+          "min-w-[64px] rounded-lg px-2 py-1 text-right text-sm font-bold tabular-nums",
+          local === 0 ? "bg-muted text-muted-foreground" : "bg-destructive/15 text-destructive"
+        )}>
+          {local === 0 ? "0" : `−${local}`} XP
+        </span>
+      </div>
+    </div>
+  );
+}
