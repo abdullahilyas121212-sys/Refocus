@@ -113,11 +113,32 @@ export default function Rewards() {
               <h2 className="font-semibold">Hard mode</h2>
               <Switch checked={penaltiesEnabled} onCheckedChange={togglePenalties} disabled={savingPenalty} />
             </div>
-            <p className="mt-1 text-sm text-muted-foreground">Lose XP when you break the rules. The brain learns faster when stakes are real.</p>
-            <ul className="mt-3 space-y-1.5 text-sm">
-              <Row label="Logging a relapse" value={`${POINTS.RELAPSE_PENALTY}`} negative />
-              <Row label="Aborting a focus session" value={`${POINTS.FOCUS_ABORT_PENALTY}`} negative />
-            </ul>
+            <p className="mt-1 text-sm text-muted-foreground">Lose XP when you break the rules. Tune the stakes to your taste.</p>
+
+            {penaltiesEnabled && (
+              <div className="mt-5 space-y-5">
+                <PenaltySlider
+                  label="Logging a relapse"
+                  field="relapse_penalty"
+                  value={relapsePenalty}
+                  min={5}
+                  max={200}
+                  step={5}
+                  userId={user?.id}
+                  onSaved={refresh}
+                />
+                <PenaltySlider
+                  label="Aborting a focus session"
+                  field="abort_penalty"
+                  value={abortPenalty}
+                  min={0}
+                  max={100}
+                  step={5}
+                  userId={user?.id}
+                  onSaved={refresh}
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>
