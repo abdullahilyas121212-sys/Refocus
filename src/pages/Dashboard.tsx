@@ -105,9 +105,32 @@ export default function Dashboard() {
         </div>
       </Link>
 
+      {/* Level / XP card */}
+      <Link to="/rewards" className="block">
+        <div className="relative overflow-hidden rounded-3xl p-5 shadow-card glass transition-transform active:scale-[0.99]">
+          <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full gradient-primary opacity-25 blur-3xl" />
+          <div className="relative flex items-center gap-3">
+            <div className="grid h-11 w-11 place-items-center rounded-xl gradient-primary shadow-glow">
+              <Crown className="h-5 w-5 text-primary-foreground" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs uppercase tracking-wider text-muted-foreground">Level {level} · {title}</p>
+              <p className="mt-0.5 text-lg font-bold tabular-nums">{points.toLocaleString()} XP</p>
+            </div>
+            <Trophy className="h-5 w-5 text-flame" />
+          </div>
+          <div className="relative mt-3 h-2 overflow-hidden rounded-full bg-muted">
+            <div className="h-full gradient-primary transition-[width] duration-700" style={{ width: `${Math.round(progress * 100)}%` }} />
+          </div>
+          <p className="relative mt-2 text-[11px] text-muted-foreground">{toNext} XP to level {level + 1}</p>
+        </div>
+      </Link>
+
       <div className="grid grid-cols-2 gap-3">
         <Link to="/goals" className="glass rounded-2xl p-4 transition-transform active:scale-[0.98]">
-          <p className="text-xs uppercase tracking-wider text-muted-foreground">Goals</p>
+          <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
+            <Target className="h-3.5 w-3.5" /> Goals
+          </div>
           <p className="mt-2 text-base font-semibold">Plan your day</p>
         </Link>
         <Link to="/detox" className="glass rounded-2xl p-4 transition-transform active:scale-[0.98]">
